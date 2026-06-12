@@ -2,6 +2,9 @@
 
 # R36S Play Timer Lock Screen
 # Displays a blocking warning screen, plays a warning sound, and enforces a break.
+# Credits: Ümit Tunç (Software Engineer) - 2026
+
+BACKTITLE="R36S Play Timer by Ümit Tunç (Software Engineer 2026)"
 
 # Ensure we redirect output and input to /dev/tty1 (main console screen)
 exec >/dev/tty1 2>&1
@@ -41,10 +44,10 @@ while [ $ELAPSED -lt $LOCK_TIME ]; do
   
   # Display dialog message box (blocking for 5 seconds using a timeout)
   dialog --clear \
-         --backtitle "R36S PLAY TIMER (Locked)" \
+         --backtitle "$BACKTITLE" \
          --title " !!! TIME EXPIRED !!! " \
          --timeout 5 \
-         --msgbox "\n  Oyun oynama süreniz sona ermiştir.\n\n  Gözlerinizin dinlenmesi için cihaz otomatik kilitlendi.\n\n  Kalan Mola Süresi: $TIME_STR\n\n  Lütfen cihazı kapatın ve biraz dinlenin." 14 60
+         --msgbox "\n  Your play time has expired.\n\n  The device has been locked automatically to let your eyes rest.\n\n  Remaining Break Time: $TIME_STR\n\n  Please power off the device or take a short break." 14 60
          
   RESPONSE=$?
   ELAPSED=$((ELAPSED + 5))
@@ -52,7 +55,7 @@ done
 
 clear
 dialog --clear \
-       --backtitle "R36S PLAY TIMER" \
+       --backtitle "$BACKTITLE" \
        --title " Break Finished " \
-       --msgbox "\n  Mola süresi tamamlandı. Tekrar oynamak için zamanlayıcıyı yeniden başlatabilirsiniz." 10 50
+       --msgbox "\n  Break time has completed. You can start the timer again to play." 10 50
 clear

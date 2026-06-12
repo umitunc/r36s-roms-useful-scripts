@@ -1,52 +1,44 @@
-# R36S Play Timer Port (Child Play-Time Manager)
+# R36S Useful Scripts & Ports Collection
 
-This port is a background play-time manager designed to control and limit kids' gaming sessions on the R36S handheld console running ArkOS.
+This repository is a collection of useful custom scripts, tools, and utility ports designed for the **R36S handheld console (running ArkOS / AmberELEC / EmulationStation)**. 
 
-When the timer expires, it automatically terminates active emulators and locks the screen for a mandatory break.
-
----
-
-## 🛠️ Installation
-
-Copy the files into the **Ports** partition of your R36S SD card following this directory structure:
-
-```text
-/roms/ports/
-├── PlayTimer.sh
-└── play_timer/
-    ├── play_timer_daemon.sh
-    └── play_timer_lock.sh
-```
-
-### 🔑 Setting Permissions
-
-You must set executable permissions for the scripts via SSH terminal or the ArkOS File Manager command-line interface:
-
-```bash
-chmod +x /roms/ports/PlayTimer.sh
-chmod +x /roms/ports/play_timer/play_timer_daemon.sh
-chmod +x /roms/ports/play_timer/play_timer_lock.sh
-```
+Feel free to contribute or add your own tools to this repository!
 
 ---
 
-## 🚀 How to Use
+## 📂 Available Tools & Scripts
 
-1. **Start the Timer**:
-   - Navigate to the **Ports** menu on your R36S device.
-   - Start **PlayTimer**.
-   - Choose a predefined time option (15m, 30m, 45m, etc.) or choose **Özel Süre Gir...** (Enter Custom Time) to specify a custom countdown in minutes.
-   - Once successfully started, the script will automatically return you to EmulationStation so you can play any game.
+### 1. ⏱️ Play Timer (Child Play-Time Manager)
+A background daemon and interactive port that monitors gameplay duration, sends remaining time alerts directly onto RetroArch games, and automatically exits emulators to lock the screen with a mandatory break screen when time is up.
 
-2. **In-game Remaining Time Notifications**:
-   - The daemon checks the remaining time in the background.
-   - For games running under RetroArch, it will trigger an OSD alert displaying `"Kalan Sure: X dk"` at the top center of the screen every minute.
-   - During the last minute, a critical warning alert `"UYARI: Son 1 dakika!"` will pop up.
+* **Main Script**: `PlayTimer.sh`
+* **Daemon & Lock Helpers**: `play_timer/`
+* **Features**:
+  - Predefined or custom time limits (minutes).
+  - Live remaining-time OSD alerts using RetroArch UDP commands.
+  - Mandatory 5-minute break screen lock upon expiration.
+  - Option to view remaining time or stop the active timer from the Ports menu.
 
-3. **Time Up & Screen Lock**:
-   - Once the time runs out, the script gracefully kills any running emulator.
-   - A lock screen will overlay `/dev/tty1` with a **5-minute (300 seconds) countdown break clock** and sound an alarm.
-   - This screen remains locked until the countdown finishes, ensuring children take a mandatory break before starting a new session.
+#### 🛠️ Installation & Activation
+1. Copy `PlayTimer.sh` and the `play_timer` directory to `/roms/ports/` on your console.
+2. Mark the scripts as executable:
+   ```bash
+   chmod +x /roms/ports/PlayTimer.sh
+   chmod +x /roms/ports/play_timer/play_timer_daemon.sh
+   chmod +x /roms/ports/play_timer/play_timer_lock.sh
+   ```
+3. Open EmulationStation, navigate to the **Ports** menu, and select **PlayTimer** to begin.
 
-4. **Cancel or Check Active Status**:
-   - Launching **PlayTimer** again from EmulationStation will display the current status and remaining time at the top. You can choose to stop/cancel the active timer here.
+---
+
+## ➕ How to Add More Scripts
+If you want to add a new script to this collection:
+1. Place your main user-facing script (with interactive elements) in the root or `ports/` directory (e.g. `MyUtility.sh`).
+2. If your utility requires support files or background scripts, bundle them inside a dedicated subdirectory named after your utility (e.g. `my_utility/`).
+3. Make sure to update this `README.md` with installation steps and descriptions for your new utility.
+
+---
+
+## ✒️ Credits
+Developed and maintained by **Ümit Tunç (Software Engineer)** - 2026.
+

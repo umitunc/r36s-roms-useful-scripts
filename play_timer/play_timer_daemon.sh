@@ -2,6 +2,7 @@
 
 # R36S Play Timer Daemon
 # Runs in the background and tracks the remaining play time.
+# Credits: Ümit Tunç (Software Engineer) - 2026
 
 DURATION_MINS=$1
 if [ -z "$DURATION_MINS" ]; then
@@ -61,9 +62,9 @@ while true; do
   # Send OSD notification to RetroArch if it is running
   if pgrep -x retroarch >/dev/null 2>&1 || pgrep -x retroarch32 >/dev/null 2>&1; then
     # Construct message
-    MSG="Kalan Sure: $REMAINING_MINS dk"
+    MSG="Time Remaining: $REMAINING_MINS min"
     if [ $REMAINING_MINS -eq 1 ]; then
-      MSG="UYARI: Son 1 dakika!"
+      MSG="WARNING: Last 1 minute!"
     fi
     
     # Send UDP message to RetroArch port 55355 using python3
