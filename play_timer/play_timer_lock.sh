@@ -6,31 +6,6 @@
 
 BACKTITLE="R36S Play Timer by Ümit Tunç (Software Engineer 2026)"
 
-# Rename process for gptokeyb tracking
-if [ "$1" != "--run" ]; then
-  exec -a playtimer_lock /bin/bash "$0" --run "$@"
-fi
-shift
-
-# Load PortMaster controls
-XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
-if [ -d "/opt/system/Tools/PortMaster/" ]; then
-  controlfolder="/opt/system/Tools/PortMaster"
-elif [ -d "/opt/tools/PortMaster/" ]; then
-  controlfolder="/opt/tools/PortMaster"
-elif [ -d "$XDG_DATA_HOME/PortMaster/" ]; then
-  controlfolder="$XDG_DATA_HOME/PortMaster"
-else
-  controlfolder="/roms/ports/PortMaster"
-fi
-
-if [ -f "$controlfolder/control.txt" ]; then
-  source "$controlfolder/control.txt"
-  get_controls
-fi
-
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-
 # Redirect stdout/stderr to tty1/tty3 so it draws on the handheld screen if available
 if [ -w /dev/tty1 ]; then
   CONSOLE_TTY="/dev/tty1"
@@ -44,24 +19,6 @@ if [ "$CONSOLE_TTY" != "/dev/stdout" ]; then
   exec >"$CONSOLE_TTY" 2>&1
   exec <"$CONSOLE_TTY"
 fi
-
-# Start control mapper (gptokeyb) for gamepad input
-if [ ! -z "$GPTOKEYB" ]; then
-  export SDL_GAMECONTROLLERCONFIG="$sdl_controllerconfig"
-  $GPTOKEYB "playtimer_lock" -c "$SCRIPT_DIR/play_timer.gptokeyb" &
-elif [ -f "/usr/local/bin/gptokeyb" ]; then
-  /usr/local/bin/gptokeyb "playtimer_lock" -c "$SCRIPT_DIR/play_timer.gptokeyb" &
-fi
-
-cleanup() {
-  killall -9 gptokeyb 2>/dev/null
-  if [ ! -z "$ESUDO" ]; then
-    $ESUDO systemctl restart oga_events &
-  elif [ -f "/usr/bin/systemctl" ]; then
-    sudo systemctl restart oga_events &
-  fi
-}
-trap cleanup EXIT
 
 export TERM=linux
 export SCREEN_RESOURCES=1

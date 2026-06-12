@@ -4,67 +4,11 @@
 # Main Port Launcher Script
 # Credits: Ümit Tunç (Software Engineer) - 2026
 
-# Rename process for gptokeyb tracking
-if [ "$1" != "--run" ]; then
-  exec -a playtimer_menu /bin/bash "$0" --run "$@"
-fi
-shift
-
-# Load PortMaster controls
-XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
-if [ -d "/opt/system/Tools/PortMaster/" ]; then
-  controlfolder="/opt/system/Tools/PortMaster"
-elif [ -d "/opt/tools/PortMaster/" ]; then
-  controlfolder="/opt/tools/PortMaster"
-elif [ -d "$XDG_DATA_HOME/PortMaster/" ]; then
-  controlfolder="$XDG_DATA_HOME/PortMaster"
-else
-  controlfolder="/roms/ports/PortMaster"
-fi
-
-if [ -f "$controlfolder/control.txt" ]; then
-  source "$controlfolder/control.txt"
-  get_controls
-fi
-
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-
-# Redirect stdout/stderr to tty1/tty3 so it draws on the handheld screen if available
-if [ -w /dev/tty1 ]; then
-  CONSOLE_TTY="/dev/tty1"
-elif [ -w /dev/tty3 ]; then
-  CONSOLE_TTY="/dev/tty3"
-else
-  CONSOLE_TTY="/dev/stdout"
-fi
-
-if [ "$CONSOLE_TTY" != "/dev/stdout" ]; then
-  exec >"$CONSOLE_TTY" 2>&1
-  exec <"$CONSOLE_TTY"
-fi
-
-# Start control mapper (gptokeyb) for gamepad input
-if [ ! -z "$GPTOKEYB" ]; then
-  export SDL_GAMECONTROLLERCONFIG="$sdl_controllerconfig"
-  $GPTOKEYB "playtimer_menu" -c "$SCRIPT_DIR/play_timer/play_timer.gptokeyb" &
-elif [ -f "/usr/local/bin/gptokeyb" ]; then
-  /usr/local/bin/gptokeyb "playtimer_menu" -c "$SCRIPT_DIR/play_timer/play_timer.gptokeyb" &
-fi
-
-cleanup() {
-  killall -9 gptokeyb 2>/dev/null
-  if [ ! -z "$ESUDO" ]; then
-    $ESUDO systemctl restart oga_events &
-  elif [ -f "/usr/bin/systemctl" ]; then
-    sudo systemctl restart oga_events &
-  fi
-}
-trap cleanup EXIT
-
 export TERM=linux
 
 PID_FILE="/tmp/play_timer.pid"
 STATUS_FILE="/tmp/play_timer_status.txt"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 DAEMON_PATH="$SCRIPT_DIR/play_timer/play_timer_daemon.sh"
 BACKTITLE="R36S Play Timer by Ümit Tunç (Software Engineer 2026)"
 
@@ -125,7 +69,7 @@ while true; do
                   5 "90 Minutes (1.5 Hours) Play Time" \
                   6 "120 Minutes (2 Hours) Play Time" \
                   7 "Enter Custom Duration..." \
-                  8 "Stop / Cancel Active Timer" 2>&1 >"$CONSOLE_TTY")
+                  8 "Stop / Cancel Active Timer" 2>&1 >/dev/tty)
                   
   # Exit if user hits Cancel or ESC
   if [ $? -ne 0 ] || [ -z "$CHOICE" ]; then
@@ -145,7 +89,7 @@ while true; do
       CUSTOM_MINS=$(dialog --clear \
                            --backtitle "$BACKTITLE" \
                            --title "Custom Play Time" \
-                           --inputbox "\nPlease enter play time in minutes (e.g. 25):" 10 50 2>&1 >"$CONSOLE_TTY")
+                           --inputbox "\nPlease enter play time in minutes (e.g. 25):" 10 50 2>&1 >/dev/tty)
       if [ $? -eq 0 ] && [ ! -z "$CUSTOM_MINS" ]; then
         # Validate that it is a positive integer
         if [[ "$CUSTOM_MINS" =~ ^[0-9]+$ ]] && [ "$CUSTOM_MINS" -gt 0 ]; then
