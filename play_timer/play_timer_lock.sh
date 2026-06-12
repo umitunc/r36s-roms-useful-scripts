@@ -29,6 +29,8 @@ if [ -f "$controlfolder/control.txt" ]; then
   get_controls
 fi
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
 # Redirect stdout/stderr to tty1/tty3 so it draws on the handheld screen if available
 if [ -w /dev/tty1 ]; then
   CONSOLE_TTY="/dev/tty1"
@@ -46,9 +48,9 @@ fi
 # Start control mapper (gptokeyb) for gamepad input
 if [ ! -z "$GPTOKEYB" ]; then
   export SDL_GAMECONTROLLERCONFIG="$sdl_controllerconfig"
-  $GPTOKEYB "playtimer_lock" &
+  $GPTOKEYB "playtimer_lock" -c "$SCRIPT_DIR/play_timer.gptokeyb" &
 elif [ -f "/usr/local/bin/gptokeyb" ]; then
-  /usr/local/bin/gptokeyb "playtimer_lock" &
+  /usr/local/bin/gptokeyb "playtimer_lock" -c "$SCRIPT_DIR/play_timer.gptokeyb" &
 fi
 
 cleanup() {

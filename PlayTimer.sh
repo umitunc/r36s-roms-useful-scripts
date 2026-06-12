@@ -27,6 +27,8 @@ if [ -f "$controlfolder/control.txt" ]; then
   get_controls
 fi
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
 # Redirect stdout/stderr to tty1/tty3 so it draws on the handheld screen if available
 if [ -w /dev/tty1 ]; then
   CONSOLE_TTY="/dev/tty1"
@@ -44,9 +46,9 @@ fi
 # Start control mapper (gptokeyb) for gamepad input
 if [ ! -z "$GPTOKEYB" ]; then
   export SDL_GAMECONTROLLERCONFIG="$sdl_controllerconfig"
-  $GPTOKEYB "playtimer_menu" &
+  $GPTOKEYB "playtimer_menu" -c "$SCRIPT_DIR/play_timer/play_timer.gptokeyb" &
 elif [ -f "/usr/local/bin/gptokeyb" ]; then
-  /usr/local/bin/gptokeyb "playtimer_menu" &
+  /usr/local/bin/gptokeyb "playtimer_menu" -c "$SCRIPT_DIR/play_timer/play_timer.gptokeyb" &
 fi
 
 cleanup() {
@@ -63,7 +65,6 @@ export TERM=linux
 
 PID_FILE="/tmp/play_timer.pid"
 STATUS_FILE="/tmp/play_timer_status.txt"
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 DAEMON_PATH="$SCRIPT_DIR/play_timer/play_timer_daemon.sh"
 BACKTITLE="R36S Play Timer by Ümit Tunç (Software Engineer 2026)"
 
