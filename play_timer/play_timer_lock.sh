@@ -6,9 +6,19 @@
 
 BACKTITLE="R36S Play Timer by Ümit Tunç (Software Engineer 2026)"
 
-# Ensure we redirect output and input to /dev/tty1 (main console screen)
-exec >/dev/tty1 2>&1
-exec </dev/tty1
+# Redirect stdout/stderr to tty1/tty3 so it draws on the handheld screen if available
+if [ -w /dev/tty1 ]; then
+  CONSOLE_TTY="/dev/tty1"
+elif [ -w /dev/tty3 ]; then
+  CONSOLE_TTY="/dev/tty3"
+else
+  CONSOLE_TTY="/dev/stdout"
+fi
+
+if [ "$CONSOLE_TTY" != "/dev/stdout" ]; then
+  exec >"$CONSOLE_TTY" 2>&1
+  exec <"$CONSOLE_TTY"
+fi
 
 export TERM=linux
 export SCREEN_RESOURCES=1

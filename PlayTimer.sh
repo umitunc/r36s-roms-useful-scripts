@@ -4,15 +4,26 @@
 # Main Port Launcher Script
 # Credits: Ümit Tunç (Software Engineer) - 2026
 
-# Redirect stdout/stderr to tty1 so it draws on the handheld screen
-exec >/dev/tty1 2>&1
-exec </dev/tty1
+# Redirect stdout/stderr to tty1/tty3 so it draws on the handheld screen if available
+if [ -w /dev/tty1 ]; then
+  CONSOLE_TTY="/dev/tty1"
+elif [ -w /dev/tty3 ]; then
+  CONSOLE_TTY="/dev/tty3"
+else
+  CONSOLE_TTY="/dev/stdout"
+fi
+
+if [ "$CONSOLE_TTY" != "/dev/stdout" ]; then
+  exec >"$CONSOLE_TTY" 2>&1
+  exec <"$CONSOLE_TTY"
+fi
 
 export TERM=linux
 
 PID_FILE="/tmp/play_timer.pid"
 STATUS_FILE="/tmp/play_timer_status.txt"
-DAEMON_PATH="/g/games/r36s/ports/custom/play_timer/play_timer_daemon.sh"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+DAEMON_PATH="$SCRIPT_DIR/play_timer/play_timer_daemon.sh"
 BACKTITLE="R36S Play Timer by Ümit Tunç (Software Engineer 2026)"
 
 # Clear the console screen
@@ -72,7 +83,7 @@ while true; do
                   5 "90 Minutes (1.5 Hours) Play Time" \
                   6 "120 Minutes (2 Hours) Play Time" \
                   7 "Enter Custom Duration..." \
-                  8 "Stop / Cancel Active Timer" 2>&1 >/dev/tty1)
+                  8 "Stop / Cancel Active Timer" 2>&1 >"$CONSOLE_TTY")
                   
   # Exit if user hits Cancel or ESC
   if [ $? -ne 0 ] || [ -z "$CHOICE" ]; then
@@ -92,7 +103,7 @@ while true; do
       CUSTOM_MINS=$(dialog --clear \
                            --backtitle "$BACKTITLE" \
                            --title "Custom Play Time" \
-                           --inputbox "\nPlease enter play time in minutes (e.g. 25):" 10 50 2>&1 >/dev/tty1)
+                           --inputbox "\nPlease enter play time in minutes (e.g. 25):" 10 50 2>&1 >"$CONSOLE_TTY")
       if [ $? -eq 0 ] && [ ! -z "$CUSTOM_MINS" ]; then
         # Validate that it is a positive integer
         if [[ "$CUSTOM_MINS" =~ ^[0-9]+$ ]] && [ "$CUSTOM_MINS" -gt 0 ]; then

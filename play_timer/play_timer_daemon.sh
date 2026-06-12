@@ -51,7 +51,8 @@ while true; do
   if [ $REMAINING_SECS -le 0 ]; then
     echo "0" > "$STATUS_FILE"
     # Launch lock screen
-    /bin/bash /g/games/r36s/ports/custom/play_timer/play_timer_lock.sh
+    SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+    /bin/bash "$SCRIPT_DIR/play_timer_lock.sh"
     rm -f "$PID_FILE" "$STATUS_FILE"
     exit 0
   fi
