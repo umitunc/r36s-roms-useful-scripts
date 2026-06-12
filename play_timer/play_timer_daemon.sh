@@ -43,6 +43,7 @@ configure_retroarch
 
 START_TIME=$(date +%s)
 TARGET_TIME=$((START_TIME + DURATION_MINS * 60))
+LAST_NOTIFIED_MIN=0
 
 while true; do
   NOW=$(date +%s)
@@ -60,22 +61,36 @@ while true; do
   REMAINING_MINS=$(( (REMAINING_SECS + 59) / 60 ))
   echo "$REMAINING_MINS" > "$STATUS_FILE"
   
-  # Send OSD notification to RetroArch if it is running
-  if pgrep -x retroarch >/dev/null 2>&1 || pgrep -x retroarch32 >/dev/null 2>&1; then
-    # Construct message
-    MSG="Time Remaining: $REMAINING_MINS min"
-    if [ $REMAINING_MINS -eq 1 ]; then
-      MSG="WARNING: Last 1 minute!"
+  # Send OSD notification to RetroArch every 5 mins, or every min if <= 5 mins
+  if [ "$REMAINING_MINS" != "$LAST_NOTIFIED_MIN" ]; then
+    SHOULD_NOTIFY=0
+    if [ $((REMAINING_MINS % 5)) -eq 0 ]; then
+      SHOULD_NOTIFY=1
+    fi
+    if [ $REMAINING_MINS -le 5 ]; then
+      SHOULD_NOTIFY=1
     fi
     
-    # Send UDP message to RetroArch port 55355 using python3
-    python3 -c "import socket; s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.sendto(b'SHOW_MSG $MSG', ('127.0.0.1', 55355))" >/dev/null 2>&1
+    if [ $SHOULD_NOTIFY -eq 1 ]; then
+      MSG="Play Timer: $REMAINING_MINS min remaining"
+      if [ $REMAINING_MINS -le 2 ]; then
+        MSG="WARNING: Only $REMAINING_MINS min left!"
+      fi
+      
+      # Try to send UDP message to RetroArch port 55355
+      python3 -c "
+import socket
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+try:
+    s.sendto(b'SHOW_MSG $MSG', ('127.0.0.1', 55355))
+except:
+    pass
+s.close()
+" >/dev/null 2>&1
+      LAST_NOTIFIED_MIN=$REMAINING_MINS
+    fi
   fi
   
-  # Check more frequently when less than 2 minutes are remaining
-  if [ $REMAINING_SECS -le 120 ]; then
-    sleep 15
-  else
-    sleep 60
-  fi
+  # Sleep 30s for reliable boundary detection
+  sleep 30
 done
